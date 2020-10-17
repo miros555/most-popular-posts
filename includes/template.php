@@ -19,8 +19,6 @@
   <?php 
 		$arg = array( 
 			'posts_per_page' => -1, 
-			'meta_key' => 'wpb_post_views_count', 
-			'orderby' => 'wpb_post_views_count', 
 			'order' => 'DESC'  );
 				
 				$query = new WP_Query( $arg ); 
