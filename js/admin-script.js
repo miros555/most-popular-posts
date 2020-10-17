@@ -2,8 +2,18 @@
 jQuery(function($){
 
 	
-	  $('#appearance').submit(function(e){
-                e.preventDefault();
+	 $('input[name="sort"]').click(function(){
+			
+				$('.exception').show(); 
+				
+				if ($(this).val()=='all'){
+						$('#form-query').attr('class','exception');
+						$('.exception>h4').html('Select if needed <span style="color:red;">exception</span>');
+				} else {
+						$('#form-query').attr('class','included');
+						$('.exception>h4').html('Select if needed <span style="color:green;">included</span>');
+				}
+               
         
                 $.ajax({
                     type: "POST",
@@ -24,19 +34,6 @@ jQuery(function($){
 		
 		/******************************Exception************************/
 		
-		$('input[name="sort"]').click(function(){
-			
-				$('.exception').show();
-				console.log('test'); 
-				
-				if ($(this).val()=='all'){
-						$('#form-query').attr('class','exception');
-						$('.exception>h4').html('Choose <span style="color:red;">exception</span>');
-				} else {
-						$('#form-query').attr('class','included');
-						$('.exception>h4').html('Choose <span style="color:green;">included</span>');
-				}
-		});
 		
 		
 

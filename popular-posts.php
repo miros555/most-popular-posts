@@ -2,7 +2,7 @@
 
 /*
 
-Plugin Name: The Most Popular Posts
+Plugin Name: Popular Posts
 Author: Miro
 Version: 1.2
 
@@ -15,13 +15,13 @@ add_action( 'wp_enqueue_scripts', 'hps_styles' );
 function hps_styles() {
 	
 		wp_enqueue_style('style-plugins', plugins_url('most-popular-posts/style.css') );
-		wp_enqueue_script( 'plug-script', plugins_url('most-popular-posts/js/script.js'), ['jquery'], '1.2', true );
 		
 		
 		if ( !is_single() ) return;
 			global $post;
 			$post_Id = (string) $post->ID;
-	
+			
+			wp_enqueue_script( 'plug-script', plugins_url('popular-posts/js/script.js'), ['jquery'], '1.2', true );
 			wp_localize_script( 'plug-script', 'optionalData', ['nonce' => wp_create_nonce('wp_rest') , 'url' => admin_url('admin-ajax.php'), 'postID' => $post_Id ]  );
 
 }
@@ -29,22 +29,43 @@ function hps_styles() {
 
 add_action( 'admin_enqueue_scripts', 'action_function_scripts' );
 function action_function_scripts( $hook_suffix ){
-			wp_enqueue_style('admin-style', plugins_url('most-popular-posts/includes/admin-style.css') );
-			wp_enqueue_script( 'admin-script', plugins_url('most-popular-posts/js/admin-script.js'), ['jquery'], '1.5', true );
+			wp_enqueue_style('admin-style', plugins_url('popular-posts/includes/admin-style.css') );
+			wp_enqueue_script( 'admin-script', plugins_url('popular-posts/js/admin-script.js'), ['jquery'], '1.5', true );
 }
 
 
 
-add_action( 'admin_menu', 'Add_My_Admin_Link', 35 );
+add_action( 'admin_menu', 'Add_My_Admin_Link' );
  
 function Add_My_Admin_Link() {
 		add_menu_page(
 			'Most_popular_posts', 
-			'Most popular posts', 
-			'manage_options', 
-			'most-popular-posts/includes/template.php'
+			'Popular posts', 
+			'manage_options', 			
+			'popular-posts/includes/template.php', '','', 5
 		);
 }
+
+
+
+add_action( 'wp_ajax_view_post', 'set_user_view_post' ); 
+add_action( 'wp_ajax_nopriv_view_post', 'set_user_view_post' );  
+
+function set_user_view_post(){
+	
+			$post_Id = $_POST['view_post'];
+		    $post_id = (string)$_POST['postId'];
+
+		var_dump ($post_Id);
+		$cookie = 'view_post' . $post_Id;
+    
+        if(isset($_REQUEST['view_post'])&&$_REQUEST['view_post']){
+            setcookie($cookie, 1, time()+86400*30, '/', $_SERVER["HTTP_HOST"]);
+            
+        } 
+}
+
+
 
 add_action( 'wp_ajax_appearance', 'set_appearance' ); 
 function set_appearance(){
@@ -139,8 +160,8 @@ function wpb_get_post_views(){
 	
 	
 		if($count==''){
-			delete_post_meta($postID, $count_key);
-			add_post_meta($postID, $count_key, '0');
+			delete_post_meta($post_id, $count_key);
+			add_post_meta($post_id, $count_key, '0');
 			return "0 View";
 		}
 	
@@ -164,7 +185,8 @@ function post_views($postID){
 				
 				
 				$arg = array( 
-					'posts_per_page' => 3,
+					'posts_per_page' => 3, 
+					//'meta_key' => 'wpb_post_views_count', 
 					'orderby' => 'wpb_post_views_count', 
 					'order' => 'DESC',
 					$catgs,

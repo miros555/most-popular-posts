@@ -1,3 +1,11 @@
+
+jQuery(function($){
+
+console.log(optionalData.postID); 
+
+		function register_view_post(){
+          
+                $.ajax({
                     type: "POST",
                     url: optionalData.url,
                     data: {
