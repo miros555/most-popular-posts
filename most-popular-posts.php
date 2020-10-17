@@ -164,8 +164,7 @@ function post_views($postID){
 				
 				
 				$arg = array( 
-					'posts_per_page' => 3, 
-					//'meta_key' => 'wpb_post_views_count', 
+					'posts_per_page' => 3,
 					'orderby' => 'wpb_post_views_count', 
 					'order' => 'DESC',
 					$catgs,
