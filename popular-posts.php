@@ -14,9 +14,8 @@ Version: 1.2
 add_action( 'wp_enqueue_scripts', 'hps_styles' );
 function hps_styles() {
 	
-		wp_enqueue_style('style-plugins', plugins_url('most-popular-posts/style.css') );
-		
-		
+		wp_enqueue_style('style-plugins', plugins_url('popular-posts/style.css') );
+			
 		if ( !is_single() ) return;
 			global $post;
 			$post_Id = (string) $post->ID;
@@ -34,7 +33,6 @@ function action_function_scripts( $hook_suffix ){
 }
 
 
-
 add_action( 'admin_menu', 'Add_My_Admin_Link' );
  
 function Add_My_Admin_Link() {
@@ -46,25 +44,19 @@ function Add_My_Admin_Link() {
 		);
 }
 
-
-
 add_action( 'wp_ajax_view_post', 'set_user_view_post' ); 
 add_action( 'wp_ajax_nopriv_view_post', 'set_user_view_post' );  
 
 function set_user_view_post(){
-	
-			$post_Id = $_POST['view_post'];
-		    $post_id = (string)$_POST['postId'];
 
-		var_dump ($post_Id);
-		$cookie = 'view_post' . $post_Id;
-    
+				$post_Id = $_POST['view_post'];
+				$cookie = 'view_post' . $post_Id;
+
         if(isset($_REQUEST['view_post'])&&$_REQUEST['view_post']){
             setcookie($cookie, 1, time()+86400*30, '/', $_SERVER["HTTP_HOST"]);
-            
-        } 
-}
 
+        }
+}
 
 
 add_action( 'wp_ajax_appearance', 'set_appearance' ); 
@@ -88,7 +80,6 @@ function set_query(){
 }	
 
 
-
 add_action( 'wp_ajax__category_query', 'set_category_query' ); 
 
 function set_category_query(){
@@ -109,13 +100,10 @@ function wpb_set_post_views($postID) {
         delete_post_meta($postID, $count_key);
         add_post_meta($postID, $count_key, '0');
     }else{
-		
-		
+			
 		if (isset($_COOKIE['view_post'])&&$_COOKIE['view_post']==$postID){  
-		
 					return;  
 			}
-
 
         $count++;
         update_post_meta($postID, $count_key, $count);
@@ -123,11 +111,6 @@ function wpb_set_post_views($postID) {
 	
 
 }
-
-//To keep the count accurate, lets get rid of prefetching
-remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0);
-
-
 
 add_action( 'wp_head', 'wpb_track_post_views');
 
@@ -145,28 +128,22 @@ function wpb_track_post_views ($post_id) {
 }
 
 
-add_filter( 'pre_get_document_title', 'wpb_get_post_views');
-
+add_action( 'pre_get_document_title', 'wpb_get_post_views');
 
 function wpb_get_post_views(){
 	
 	
-	   if ( !is_single() ) return;
+		if ( !is_single() ) return;
+	   
 			global $post;
 			$post_id = $post->ID;    
 	
 			$count_key = 'wpb_post_views_count';
 			$count = get_post_meta($post_id, $count_key, true);
-	
-	
-		if($count==''){
-			delete_post_meta($post_id, $count_key);
-			add_post_meta($post_id, $count_key, '0');
-			return "0 View";
-		}
-	
+			
+			!isset($_COOKIE['view_post']) ? $count +=1 : null;
 
-	echo '<h3 class="views"> '.$count.' Views</h3><br>';
+			echo '<h3 class="views"> '.$count.' Views</h3><br>';
 
 }	
 		
@@ -186,7 +163,6 @@ function post_views($postID){
 				
 				$arg = array( 
 					'posts_per_page' => 3, 
-					//'meta_key' => 'wpb_post_views_count', 
 					'orderby' => 'wpb_post_views_count', 
 					'order' => 'DESC',
 					$catgs,
@@ -211,7 +187,7 @@ function post_views($postID){
 			$query = get_posts( $arg ); 
 				
 						$count = 0;
-						$content = '';
+						$content = '<h3 class="mp">MOST**POPULAR**POSTS</h3>';
 						
 			foreach ( $query as $post ){
 						
@@ -219,10 +195,11 @@ function post_views($postID){
 					
 				$post_id = (string) $post->ID;
 				$post_views = get_post_meta($post_id, 'wpb_post_views_count', true);
+				$post_views = !empty ($post_views) ? 'Views: '.$post_views : 'Views: 0';
 	
 				$content.= '<div class="single-post"><h2>' . $count . ' POSITION</h2><div class="float">' 
 							. get_the_post_thumbnail($post_id) . '<div>'. $post->post_date . '<h4>
-							<h5>Views: '.$post_views.'</h5><h4><a href="' . $post->guid . '">'
+							<h5>'.$post_views.'</h5><h4><a href="' . $post->guid . '">'
 							.$post->post_title. '</a></h4>' . $post->post_excerpt . '<br> 
 							<a href="' . $post->guid . '" class="read-more">READ MORE</a></div>';  
 							
@@ -233,14 +210,3 @@ function post_views($postID){
 	
 
 }
-
-
-	
-	
-	
-	
-	
-	
-	
-	
-	

@@ -8,7 +8,6 @@
     <p><input name="sort" type="radio" value="all" <?php echo get_option( 'appearance')==='all'?'checked':''; ?>> All</p>
     <p><input name="sort" type="radio" value="favorite" <?php echo get_option( 'appearance')==='favorite'?'checked':''; ?>> Favorite only</p>
 
-    <p><input type="submit" value="Выбрать"></p>
   </form> 
 
 
