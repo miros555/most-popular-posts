@@ -1,35 +1,23 @@
 <?php
-
 /*
 
 Plugin Name: Popular Posts
 Author: Miro
 Version: 1.2
-
 *****
 
 */
 
-
-add_action( 'wp_enqueue_scripts', 'hps_styles' );
-function hps_styles() {
-	
-		wp_enqueue_style('style-plugins', plugins_url('popular-posts/style.css') );
-			
-		if ( !is_single() ) return;
-			global $post;
-			$post_Id = (string) $post->ID;
-			
-			wp_enqueue_script( 'plug-script', plugins_url('popular-posts/js/script.js'), ['jquery'], '1.2', true );
-			wp_localize_script( 'plug-script', 'optionalData', ['nonce' => wp_create_nonce('wp_rest') , 'url' => admin_url('admin-ajax.php'), 'postID' => $post_Id ]  );
-
+add_action( 'wp_enqueue_scripts', 'popular_posts_styles' );
+function popular_posts_styles() {
+		wp_enqueue_style('style-plugin', plugins_url('popular-posts/style.css') );
 }
 
 
 add_action( 'admin_enqueue_scripts', 'action_function_scripts' );
 function action_function_scripts( $hook_suffix ){
 			wp_enqueue_style('admin-style', plugins_url('popular-posts/includes/admin-style.css') );
-			wp_enqueue_script( 'admin-script', plugins_url('popular-posts/js/admin-script.js'), ['jquery'], '1.5', true );
+			wp_enqueue_script( 'admin-script', plugins_url('popular-posts/js/admin-script.js'), ['jquery'] );
 }
 
 
@@ -42,20 +30,6 @@ function Add_My_Admin_Link() {
 			'manage_options', 			
 			'popular-posts/includes/template.php', '','', 5
 		);
-}
-
-add_action( 'wp_ajax_view_post', 'set_user_view_post' ); 
-add_action( 'wp_ajax_nopriv_view_post', 'set_user_view_post' );  
-
-function set_user_view_post(){
-
-				$post_Id = $_POST['view_post'];
-				$cookie = 'view_post' . $post_Id;
-
-        if(isset($_REQUEST['view_post'])&&$_REQUEST['view_post']){
-            setcookie($cookie, 1, time()+86400*30, '/', $_SERVER["HTTP_HOST"]);
-
-        }
 }
 
 
@@ -85,46 +59,69 @@ add_action( 'wp_ajax__category_query', 'set_category_query' );
 function set_category_query(){
 			$args = $_POST['args'];
 
-			update_option( 'category_query', $args);
-	
+			update_option( 'category_query', $args);	
 }	
-
 
 
 function wpb_set_post_views($postID) {
 	
     $count_key = 'wpb_post_views_count';
     $count = get_post_meta($postID, $count_key, true);
+
     if($count==''){
        
         delete_post_meta($postID, $count_key);
         add_post_meta($postID, $count_key, '0');
     }else{
-			
-		if (isset($_COOKIE['view_post'])&&$_COOKIE['view_post']==$postID){  
-					return;  
-			}
+		
+		$cookie = 'view_post_'. $postID;
 
-        $count++;
-        update_post_meta($postID, $count_key, $count);
+		if( empty($_COOKIE[$cookie]) ){
+            setcookie($cookie, 1, time()+86400*30, '/', $_SERVER["HTTP_HOST"]);
+			$count++;
+            update_post_meta($postID, $count_key, $count);
+        } else {
+			
+			return;
+		}   
+        
     }
 	
 
 }
 
-add_action( 'wp_head', 'wpb_track_post_views');
+add_action( 'wp', 'wpb_track_post_views');
 
-function wpb_track_post_views ($post_id) {
-	$count = get_post_meta($post_id, 'wpb_post_views_count', true);
-
+function wpb_track_post_views () {
 	
-    if ( !is_single() ) return;
-    if ( empty ( $post_id) ) {
-        global $post;
-        $post_id = $post->ID;    
+		global $post;
+		$count_key = 'wpb_post_views_count';
+		$postID = $post->ID; 
+		
+		$count = get_post_meta($postID, $count_key, true);
+
+		if($count==''){
+       
+        delete_post_meta($postID, $count_key);
+        add_post_meta($postID, $count_key, '1');
+		
+		}else{
+		
+			$cookie = 'view_post_'. $postID;
+		
+		
+		
+			if( empty($_COOKIE[$cookie]) ){
+				setcookie($cookie, 1, time()+86400*30, '/', $_SERVER["HTTP_HOST"]);
+				$count++;
+				update_post_meta($postID, $count_key, $count);
+			} else {
+			
+				return;
+		}
+  
     }
-    wpb_set_post_views($post_id);
-	
+
 }
 
 
@@ -132,18 +129,17 @@ add_action( 'pre_get_document_title', 'wpb_get_post_views');
 
 function wpb_get_post_views(){
 	
-	
 		if ( !is_single() ) return;
-	   
-			global $post;
-			$post_id = $post->ID;    
+		
+		global $post;
+		$post_id = $post->ID;    
 	
-			$count_key = 'wpb_post_views_count';
-			$count = get_post_meta($post_id, $count_key, true);
+		$count_key = 'wpb_post_views_count';
+		$count = get_post_meta($post_id, $count_key, true);
 			
-			!isset($_COOKIE['view_post']) ? $count +=1 : null;
+		!isset($_COOKIE['view_post']) ? $count : null;
 
-			echo '<h3 class="views"> '.$count.' Views</h3><br>';
+		echo '<h3 class="views"> '.$count.' Views</h3><br>';
 
 }	
 		
@@ -163,6 +159,7 @@ function post_views($postID){
 				
 				$arg = array( 
 					'posts_per_page' => 3, 
+					'meta_key' => 'wpb_post_views_count',
 					'orderby' => 'wpb_post_views_count', 
 					'order' => 'DESC',
 					$catgs,
@@ -206,7 +203,5 @@ function post_views($postID){
 						}  
 		
 		return $content;
-
-	
 
 }
